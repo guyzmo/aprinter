@@ -39,13 +39,13 @@ create_depends_dir() {
 # base actions functions
 
 clean() {
-    echo "  Clean all builds for ${TARGET}"
-    ($V; rm -f ${TARGET}*)
+    echo "  Clean all intermediate builds for ${TARGET}"
 }
 
 flush() {
-    echo "  Flush all builds and depends for ${TARGET}"
+    echo "  Flush all builds and firmwares for ${TARGET}"
     clean
+    ($V; rm -f ${TARGET}*)
 }
 
 configure() {
@@ -135,5 +135,6 @@ fail() {
 }
 
 check_build_tool() {
-    "$1" --version >/dev/null || fail "Missing or broken ${2}" 
+    "$1" --version > /dev/null 2> /dev/null
+    return $?
 }

@@ -94,8 +94,8 @@ configure_sam3x() {
     fi
 
     if [ $USE_USB_SERIAL -gt 0 ]; then
-        cp "${ASF_DIR}/common/services/usb/class/cdc/device/udi_cdc.c" ${BUILD}/udi_cdc-hacked.c
-        patch -p0 ${BUILD}/udi_cdc-hacked.c < ${ROOT}/patches/asf-cdc-tx.patch
+        ($V; cp "${ASF_DIR}/common/services/usb/class/cdc/device/udi_cdc.c" ${BUILD}/udi_cdc-hacked.c)
+        ($V; patch -p0 ${BUILD}/udi_cdc-hacked.c < ${ROOT}/patches/asf-cdc-tx.patch > /dev/null 2> /dev/null)
 
         if [ "$ARCH" = "sam3x" ]; then
             FLAGS_C_CXX+=( -DUSB_SERIAL )
@@ -122,8 +122,14 @@ configure_sam3x() {
     INSTALL=install_sam3x
     RUNBUILD=build_arm
     UPLOAD=upload_sam3x
-    FLUSH=flush_sam3x
+    CLEAN=clean_sam3x
+    FLUSH=flush_arm
     CHECK=check_depends_sam3x
+}
+
+clean_sam3x() {
+    clean_arm
+    ($V; rm -f "${BUILD}"/udi_cdc-hacked.c )
 }
 
 check_depends_sam3x() {
@@ -146,13 +152,6 @@ upload_sam3x() {
         fi
     fi
     ${BOSSA_DIR}/bin/bossac -p ${BOSSA_PORT#/dev/} "${bossa_args[@]}" -i -e -w -v -b ${TARGET}.bin -R
-}
-
-flush_sam3x() {
-    flush_arm
-    echo "  Flushing SAM3X toolchain"
-    rm -rf ${ASF_BASE_DIR}
-    rm -rf ${BOSSA_DIR}
 }
 
 install_sam3x() {

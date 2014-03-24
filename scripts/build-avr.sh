@@ -62,21 +62,16 @@ install_avr() {
 }
 
 flush_avr() {
-    echo "  Flushing AVR toolchain. Are you sure? (C-c to abort)"
-    read
-
-    (V;
-    rm -rf ${DEPS}/binutils-2.23.2
-    rm -rf ${DEPS}/gcc-4.8.2
-    )
+    flush
 }
 
 check_depends_avr() {
-    echo "   Checking depends"
-    check_build_tool "${AVR_GXX}" "AVR compiler"
-    check_build_tool "${AVR_OBJCOPY}" "AVR objcopy"
-    check_build_tool "${AVR_SIZE}" "AVR size calculator"
-    check_build_tool "${AVRDUDE}" "AVR uploader 'avrdude'"
+    echo -n "   Checking depends: "
+    check_build_tool "${AVR_GXX}" || fail "Missing AVR compiler"
+    check_build_tool "${AVR_OBJCPY}" || fail "Missing AVR objcopy"
+    check_build_tool "${AVR_SIZE}" || fail "Missing AVR size calculator"
+    check_build_tool "${AVRDUDE}" || fail "Missing AVR uploader 'avrdude'"
+    echo "Ok"
 }
 
 configure_avr() {
@@ -88,8 +83,6 @@ configure_avr() {
 
     AVRDUDE=${AVR_GCC_PATH}/bin/avrdude
 
-    CXX=${AVR_GXX}
-    OBJCPY=${AVR_OBJCPY}
     AVRDUDE_FLAGS="-p $MCU -D -P $AVRDUDE_PORT -b $AVRDUDE_BAUDRATE -c $AVRDUDE_PROGRAMMER"
     CXXFLAGS="-std=c++11 -mmcu=${MCU} -DF_CPU=${F_CPU} -DNDEBUG -O2 -fwhole-program \
     -ffunction-sections -fdata-sections -Wl,--gc-sections \
@@ -106,9 +99,9 @@ build_avr() {
     echo "  Compiling for AVR"
     check_depends_avr
     echo "   Compiling and linking"
-    ($V; $CXX $CXXFLAGS $SOURCE -o $TARGET.elf -Wl,-u,vfprintf -lprintf_flt || exit 2)
+    ($V; $AVR_GXX $CXXFLAGS $SOURCE -o $TARGET.elf -Wl,-u,vfprintf -lprintf_flt || exit 2)
     echo "   Building images"
-    ($V; $OBJCPY -j .text -j .data -O ihex $TARGET.elf $TARGET.hex || exit 2)
+    ($V; $AVR_OBJCPY -j .text -j .data -O ihex $TARGET.elf $TARGET.hex || exit 2)
     echo -n "   Size of build: "
     $AVR_SIZE --format=avr --mcu=${MCU} ${TARGET}.elf | grep bytes | sed 's/\(.*\):\s*\(.* bytes.* Full\)/\1: \2/g' | sed 'N;s/\n/\; /' | sed 's/\s\s*/ /g'
 }

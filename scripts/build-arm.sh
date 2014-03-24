@@ -44,7 +44,7 @@ ARM_GCC_PATH="${ROOT}/depends/gcc-arm-none-eabi-${GCCARM_CURRENT}/bin"
 if [ -n "${CUSTOM_ARM_GCC}" ]; then
     ARM_GCC_PREFIX=${CUSTOM_ARM_GCC}
 else
-    ARM_GCC_PREFIX=${ARM_GCC_PATH}/arm-none-eabi
+    ARM_GCC_PREFIX=${ARM_GCC_PATH}/arm-none-eabi-
 fi
 
 ARM_CC=${ARM_GCC_PREFIX}gcc
@@ -70,16 +70,15 @@ install_arm() {
 }
 
 flush_arm() {
-    clean
-    echo "  Deleting GCC-ARM install. Are you sure? (C-c to abort)"
-    read 
-    rm -rf ${ARM_GCC_PATH}
+    flush
+    clean_arm
 }
 
 check_depends_arm() {
-    echo "   Checking depends"
-    check_build_tool "${ARM_CC}" "ARM compiler"
-    check_build_tool "${ARM_OBJCOPY}" "ARM objcopy"
+    echo -n "   Checking depends: "
+    check_build_tool "${ARM_CC}" || fail "Missing ARM compiler"
+    check_build_tool "${ARM_OBJCOPY}" || fail "Missing ARM objcopy"
+    echo "Ok"
 }
 
 clean_arm() {
